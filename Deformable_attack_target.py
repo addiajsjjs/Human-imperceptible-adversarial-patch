@@ -6,7 +6,7 @@ from torchvision import transforms
 import numpy as np
 import torch
 from PIL import Image
-from untils1 import mapping3d,rotate,stick,feature
+from untils import mapping3d,rotate,stick,feature
 from models import image_transform_layers
 import cv2
 from scipy.ndimage import gaussian_filter
@@ -34,9 +34,9 @@ class DEIndividal:
 
         image_np = np.array(image)
         image_np = image_np.astype(float)
+        #LRM strategy
         ink_image_np = image_np * 0.333
 
-        # 遍历中心和长度，生成多边形
         for center, lenth in zip(self.centers, self.lenthes):
             points = []
             y,x = center
@@ -46,7 +46,7 @@ class DEIndividal:
                 new_y = y + lenth[i] * math.sin(i * angle)
                 points.append([new_x, new_y])
 
-            points.append(points[0])  # 闭合路径
+            points.append(points[0])  
             points = np.array(points)
             
             tck, u = splprep([points[:, 0], points[:, 1]], s=0, per=True)
@@ -75,7 +75,6 @@ class DEIndividal:
         image_np = np.array(image)
         image_np = image_np.astype(float)
         ink_image_np = image_np * 0.333
-        # 遍历中心和长度，生成多边形
         for center, lenth in zip(self.centers, self.lenthes):
             points = []
             y,x = center
@@ -85,7 +84,7 @@ class DEIndividal:
                 new_y = y + lenth[i] * math.sin(i * angle)
                 points.append([new_x, new_y])
 
-            points.append(points[0])  # 闭合路径
+            points.append(points[0])  
             points = np.array(points)
             
             tck, u = splprep([points[:, 0], points[:, 1]], s=0, per=True)
@@ -100,11 +99,10 @@ class DEIndividal:
             spline_points[:, 1] = np.clip(spline_points[:, 1], 0, height - 1)
             spline_points = spline_points.reshape((-1, 1, 2))
             cv2.fillPoly(attack_mask, [spline_points], 255)
-            # 将 mask 区域中的像素替换为 ink_image_np 中的对应像素
+
             attack_image[attack_mask == 255] = ink_image_np[attack_mask == 255]
         attack_image[mask == 0] = image[mask==0]
-        #cv2.imwrite('10_27.jpg',attack_image)
-            # 转换为 Torch 张量
+
         
         attack_image = PIL2torch(attack_image)
 
@@ -127,9 +125,7 @@ class Deformable_ink_attack_target:
         self.AreaNum = AreaNum
         self.AnchorNum = AnchorNum
 
-    '''
-    产生初始面部掩码
-    '''
+
     def generate_face_mask(self, image):
         mask = feature.make_mask(image)
         return mask
@@ -156,13 +152,13 @@ class Deformable_ink_attack_target:
 
 
     def MutationOperation(self, DE_all, image, mask, CR=0.3):
-        # 创建一个新的列表来存储变异后的个体
+
         DE_new = []
         h,w = image.shape
         for i in range(self.sizepop):
-            lenthes = DE_all[i].lenthes.copy()  # 拷贝当前个体的长度信息
+            lenthes = DE_all[i].lenthes.copy()  
             centers = DE_all[i].centers.copy()
-            # 随机选择两个不同于当前个体的索引 a 和 b
+
             a = np.random.randint(0, self.sizepop - 1)
             while a == i:
                 a = np.random.randint(0, self.sizepop - 1)
@@ -171,12 +167,12 @@ class Deformable_ink_attack_target:
             while b == i or b == a:
                 b = np.random.randint(0, self.sizepop - 1)
 
-            # 获取 a 和 b 个体的 lenthes 信息
+
             a_lenthes = DE_all[a].lenthes
             b_lenthes = DE_all[b].lenthes
             a_centers = DE_all[a].centers
             b_centers = DE_all[b].centers
-            # 进行变异操作并生成新的 lenthes
+
             NEWcenters = []
             for center, a_center, b_center in zip(centers, a_centers, b_centers):
                 center[0] += int(center[0] + CR * (a_center[0]-b_center[0]))
@@ -194,29 +190,24 @@ class Deformable_ink_attack_target:
                 new_lenth = []
                 for j in range(self.AreaNum):
                     value = lenth[j] + CR * (a_lenth[j] - b_lenth[j])
-                    # 限制长度的范围在 [5, 15] 之间
+                   
                     value = max(2, min(value, 20))
                     new_lenth.append(value)
                 NEWlenthes.append(new_lenth)
 
-            # 创建一个新的个体并将变异后的 lenthes 赋值给它
+          
             new_individual = DE_all[i].__class__()
             new_individual.AreaNum = self.AreaNum
             new_individual.lenthes = NEWlenthes
             new_individual.centers = NEWcenters
 
-            # 将新个体加入到 DE_new 列表中
+           
             DE_new.append(new_individual)
 
         return DE_new
             
     def CrossoverOperation(self, DE_all, DE_mutation, CR=0.9):
-        '''
-        Perform crossover operation for the population.
-        CR: Crossover rate, probability of choosing a gene from the mutated individual.
-        DE_all: Original population.
-        DE_mutation: Population after mutation operation.
-        '''
+
         DE_new = []
         for i in range(self.sizepop):
             original_lenthes = DE_all[i].lenthes
@@ -254,7 +245,7 @@ class Deformable_ink_attack_target:
             new_individual.lenthes = new_lenthes
             new_individual.centers = crossover_centers
 
-            # 将新个体加入到 DE_new 列表中
+
             DE_new.append(new_individual)   
 
         return DE_new
@@ -288,23 +279,19 @@ class Deformable_ink_attack_target:
             DE_all, top1_labels_all = self.CaculateFitness(DE_all, image, true_name, target_name, mask)
             top1_labels = []
             for i in range(len(DE_all)):
-                #print(f'DE_next[i].fitness:{DE_next[i].fitness}')
-                #print(f'DE_all[i]:{DE_all[i].fitness}')
+
                 if DE_next[i].fitness < DE_all[i].fitness:
                     DE_all[i].centers = DE_next[i].centers
                     DE_all[i].lenthes = DE_next[i].lenthes
                     DE_all[i].fitness = DE_next[i].fitness
-                    #print('change!')
+
                     top1_labels.append(top1_labels_next[i])
                 else:
                     top1_labels.append(top1_labels_all[i])
-                    #print('unchange!')
+
                     continue
 
-            #min_fitness_individual = min(DE_all, key=lambda x: x.fitness)
-            #print(f'最小fitness: {min_fitness_individual.fitness}')
-            #print(f'对应的个体: {min_fitness_individual.centers}')
-            #print(f'对应的个体: {min_fitness_individual.lenthes}')
+
             if any(label == target_name for label in top1_labels):
                 return DE_all, top1_labels, True   
             t+=1

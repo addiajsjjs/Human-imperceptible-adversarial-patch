@@ -12,7 +12,7 @@ def default_list_reader(fileList, data_type, folder_prefix=""):
     if data_type == 'casia':
         with open(fileList, 'r') as file:
             for line in file.readlines():
-                #s2_NIR_10117_001.bmp
+
                 split_line = line.strip().split('_')
                 if split_line[1] == 'NIR':
                     filename = f"{split_line[0]}_NIR_{split_line[2]}_{split_line[3]}"
@@ -20,10 +20,9 @@ def default_list_reader(fileList, data_type, folder_prefix=""):
                 else:
                     filename = f"{split_line[0]}_VIS_{split_line[2]}_{split_line[3]}"
                     split_line = ['VIS',filename]
-                
-                #重新整合成完整路径
+
                 img_path = os.path.join(*split_line)
-                #label = 10117
+
                 label = split_line[1].split('_')[2]
                 img_path = os.path.normpath(img_path)
                 imgList.append((img_path, int(label)))
@@ -31,7 +30,7 @@ def default_list_reader(fileList, data_type, folder_prefix=""):
     elif data_type == 'oulu':
         with open(fileList, 'r') as file:
             for line in file.readlines():
-                #NI_Strong_P001_Disgust_020.jpeg
+
                 split_line = line.strip().split('_')
                 img_path = os.path.join(*split_line)
                 label = split_line[2].replace('P', '')
@@ -67,8 +66,7 @@ class NirVisDataset(data.Dataset):
     def __getitem__(self, index):
         imgPath, label = self.img_list[index]
         img = self.loader(os.path.join(self.root, imgPath))
-        #随机选取一个target_label
-        #random.seed(20031101)
+
         target_label = random.choice([x for x in self.labels_list if x != label])
 
         if self.transform:
@@ -130,14 +128,3 @@ class NirVisDatasetPerSubject(data.Dataset):
 
 
 
-
-
-if __name__=="__main__":
-  #root = '/home/qiuchengyu/mynewproject/adv-nir_face/upCASIA224x224'
-  root = '/home/qiuchengyu/mynewproject/adv-nir_face/buua224x224'
-  #file_list = '/home/qiuchengyu/mynewproject/adv-nir_face/upCASIA224x224/probe_file.txt'
-  file_list = '/home/qiuchengyu/mynewproject/adv-nir_face/buua224x224/test_nir_paths.txt'
-  data_type = 'buua'
-  NIR_probe1_dataset = NirVisDataset(root,file_list,data_type)
-  print(NIR_probe1_dataset[0])
-  print(len(NIR_probe1_dataset))

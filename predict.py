@@ -78,16 +78,16 @@ def predict(args, model, gallery_file_path, probe_file_path):
     print(f"acc:{check/total_num_of_examples}")
 
 if __name__ == "__main__":
-    gallery_file_path = '/home/qiuchengyu/mynewproject/adv-nir_face/physical-attack-datasets/upCASIA224x224/gallery_file.txt'
-    probe_file_path = '/home/qiuchengyu/mynewproject/adv-nir_face/physical-attack-datasets/upCASIA224x224/probe_file.txt'
+    gallery_file_path = ''
+    probe_file_path = ''
     parser = argparse.ArgumentParser(description='Process some dataset.')
-    parser.add_argument('--dataset_path', type=str, help='Path to the dataset', default='/home/qiuchengyu/mynewproject/adv-nir_face/physical-attack-datasets/upCASIA224x224')
+    parser.add_argument('--dataset_path', type=str, help='Path to the dataset')
     parser.add_argument('--gallery_file_path', type=str, default=128)
     parser.add_argument('--probe_file_path', type=str, default=128)
     parser.add_argument('--batch_size', type=int, default=10)
     parser.add_argument('--workers', type=int, default=16)
     parser.add_argument('--model', type=str, default='DVG')
-    parser.add_argument('--pretrained_path', default='/home/lizzo/myproject/newproject/project/models', type=str)
+    parser.add_argument('--pretrained_path',  type=str)
     parser.add_argument('--data_type', default='caisa', type=str,choices=["casia","buua","oulu"])
     args = parser.parse_args()
     model = load_model.load_model(args)

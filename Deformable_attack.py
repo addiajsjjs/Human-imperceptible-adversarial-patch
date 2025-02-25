@@ -34,9 +34,10 @@ class DEIndividal:
 
         image_np = np.array(image)
         image_np = image_np.astype(float)
+        #LRM strategy
         ink_image_np = image_np * 0.333
 
-        # 遍历中心和长度，生成多边形
+        
         for center, lenth in zip(self.centers, self.lenthes):
             points = []
             y,x = center
@@ -46,7 +47,7 @@ class DEIndividal:
                 new_y = y + lenth[i] * math.sin(i * angle)
                 points.append([new_x, new_y])
 
-            points.append(points[0])  # 闭合路径
+            points.append(points[0])  
             points = np.array(points)
 
             tck, u = splprep([points[:, 0], points[:, 1]], s=0, per=True)
@@ -62,9 +63,9 @@ class DEIndividal:
             spline_points = spline_points.reshape((-1, 1, 2))
             cv2.fillPoly(attack_mask, [spline_points], 255)
 
-            # 将 mask 区域中的像素替换为 ink_image_np 中的对应像素
+            
             attack_image[attack_mask == 255] = ink_image_np[attack_mask == 255]
-            #attack_image[attack_mask == 255] = 0
+            
         attack_image[mask == 0] = image[mask==0]
 
         return attack_image
@@ -79,7 +80,7 @@ class DEIndividal:
         image_np = image_np.astype(float)
         ink_image_np = image_np * 0.333
 
-        # 遍历中心和长度，生成多边形
+        
         for center, lenth in zip(self.centers, self.lenthes):
             points = []
             y,x = center
@@ -89,7 +90,7 @@ class DEIndividal:
                 new_y = y + lenth[i] * math.sin(i * angle)
                 points.append([new_x, new_y])
 
-            points.append(points[0])  # 闭合路径
+            points.append(points[0])  
             points = np.array(points)
 
             tck, u = splprep([points[:, 0], points[:, 1]], s=0, per=True)
@@ -105,7 +106,7 @@ class DEIndividal:
             spline_points = spline_points.reshape((-1, 1, 2))
             cv2.fillPoly(attack_mask, [spline_points], 255)
 
-            # 将 mask 区域中的像素替换为 ink_image_np 中的对应像素
+            
             attack_image[attack_mask == 255] = ink_image_np[attack_mask == 255]
         attack_image[mask == 0] = image[mask==0]
         attack_mask_tmp[attack_mask == 0] = 255
@@ -120,7 +121,7 @@ class DEIndividal:
         image_np = np.array(image)
         image_np = image_np.astype(float)
         ink_image_np = image_np * 0.333
-        # 遍历中心和长度，生成多边形
+       
         for center, lenth in zip(self.centers, self.lenthes):
             points = []
             y,x = center
@@ -130,7 +131,7 @@ class DEIndividal:
                 new_y = y + lenth[i] * math.sin(i * angle)
                 points.append([new_x, new_y])
 
-            points.append(points[0])  # 闭合路径
+            points.append(points[0])  
             points = np.array(points)
 
             tck, u = splprep([points[:, 0], points[:, 1]], s=0, per=True)
@@ -146,12 +147,10 @@ class DEIndividal:
             spline_points = spline_points.reshape((-1, 1, 2))
             cv2.fillPoly(attack_mask, [spline_points], 255)
 
-            # 将 mask 区域中的像素替换为 ink_image_np 中的对应像素
-            #attack_image[attack_mask == 255] = ink_image_np[attack_mask == 255]
+
             attack_image[attack_mask == 255] = 0
         attack_image[mask == 0] = image[mask==0]
-        #cv2.imwrite('10_27.jpg',attack_image)
-            # 转换为 Torch 张量
+
         
         attack_image = PIL2torch(attack_image)
 
@@ -174,9 +173,7 @@ class Deformable_ink_attack:
         self.AreaNum = AreaNum
         self.AnchorNum = AnchorNum
 
-    '''
-    产生初始面部掩码
-    '''
+
     def generate_face_mask(self, image):
         mask = feature.make_mask(image)
         return mask
@@ -203,13 +200,13 @@ class Deformable_ink_attack:
 
 
     def MutationOperation(self, DE_all, image, mask, CR=0.3):
-        # 创建一个新的列表来存储变异后的个体
+
         DE_new = []
         h,w = image.shape
         for i in range(self.sizepop):
-            lenthes = DE_all[i].lenthes.copy()  # 拷贝当前个体的长度信息
+            lenthes = DE_all[i].lenthes.copy()  
             centers = DE_all[i].centers.copy()
-            # 随机选择两个不同于当前个体的索引 a 和 b
+
             a = np.random.randint(0, self.sizepop - 1)
             while a == i:
                 a = np.random.randint(0, self.sizepop - 1)
@@ -218,12 +215,12 @@ class Deformable_ink_attack:
             while b == i or b == a:
                 b = np.random.randint(0, self.sizepop - 1)
 
-            # 获取 a 和 b 个体的 lenthes 信息
+
             a_lenthes = DE_all[a].lenthes
             b_lenthes = DE_all[b].lenthes
             a_centers = DE_all[a].centers
             b_centers = DE_all[b].centers
-            # 进行变异操作并生成新的 lenthes
+
             NEWcenters = []
             for center, a_center, b_center in zip(centers, a_centers, b_centers):
                 center[0] += int(center[0] + CR * (a_center[0]-b_center[0]))
@@ -256,12 +253,7 @@ class Deformable_ink_attack:
         return DE_new
             
     def CrossoverOperation(self, DE_all, DE_mutation, CR=0.9):
-        '''
-        Perform crossover operation for the population.
-        CR: Crossover rate, probability of choosing a gene from the mutated individual.
-        DE_all: Original population.
-        DE_mutation: Population after mutation operation.
-        '''
+
         DE_new = []
         for i in range(self.sizepop):
             original_lenthes = DE_all[i].lenthes
@@ -298,7 +290,7 @@ class Deformable_ink_attack:
             new_individual.lenthes = new_lenthes
             new_individual.centers = crossover_centers
 
-            # 将新个体加入到 DE_new 列表中
+
             DE_new.append(new_individual)    
 
         return DE_new
@@ -344,63 +336,12 @@ class Deformable_ink_attack:
                     continue
 
             min_fitness_individual = min(DE_all, key=lambda x: x.fitness)
-            #print(f'最小fitness: {min_fitness_individual.fitness}')
-            #print(f'对应的个体: {min_fitness_individual.centers}')
-            #print(f'对应的个体: {min_fitness_individual.lenthes}')
+
             if not all(label == true_name for label in top1_labels):
                 return DE_all, top1_labels, True   
             t+=1
         return DE_all, top1_labels, False
 
-    def checkRobustness(self, args, DE_one, image, mask, true_name):
-            Robustness_num = args.Robustness_num
-            h,w = image.shape
-            lenthes = DE_one.lenthes.copy()  
-            centers = DE_one.centers.copy()
-            #print(f"before lenthes:{lenthes}")
-            #print(f"before centers:{centers}")
-
-            if args.robustness_type == "centers":
-                for center in centers:
-                    center[0] += random.randint(-Robustness_num,Robustness_num)
-                    center[1] += random.randint(-Robustness_num,Robustness_num)
-                    center[0] = max(0, min(center[0], h-1))
-                    center[1] = max(0, min(center[1], w-1))
-                new_individual = DE_one.__class__()
-                new_individual.AreaNum = self.AreaNum
-                new_individual.centers = centers
-                new_individual.lenthes = lenthes
-
-
-            elif args.robustness_type == "lenthes":
-                NEWlenthes = []
-                for lenth in lenthes:
-                    new_lenth = []
-                    for j in range(self.AreaNum):
-                        value = lenth[j] + random.randint(-Robustness_num,Robustness_num)
-                        value = max(2, min(value, 20))
-                        new_lenth.append(value)
-                    NEWlenthes.append(new_lenth)
-                new_individual = DE_one.__class__()
-                new_individual.AreaNum = self.AreaNum
-                new_individual.centers = centers
-                new_individual.lenthes = NEWlenthes
-
-            DE_one = new_individual
-            #print(f"after lenthes:{DE_one.lenthes}")
-            #print(f"after centers:{DE_one.centers}")
-            attack_images = []        
-            attack_image = DE_one.generate_attack_mask(image, mask)
-            attack_images.append(attack_image)
-            attack_images_tensor = torch.stack(attack_images)
-            perturbed_features = feature_extract(self.args, attack_images_tensor, self.model)
-            with torch.no_grad():
-                top1_labels, top1_scores, top2_labels, top2_scores = utils.top2_predict(self.gallery_features, 
-                                                                                    perturbed_features, self.gallery_names)
-            for top1_label in top1_labels:
-                if top1_label != true_name:
-                    return True
-            return False
 
     def excute(self, args, images):
         check = 0
