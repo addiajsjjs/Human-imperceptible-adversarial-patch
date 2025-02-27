@@ -42,16 +42,14 @@ def perform_attack(args, model, gallery_file_path, probe_file_path):
       top1_labels, top1_scores, top2_labels, top2_scores = utils.top2_predict(gallery_features, 
                                                                               probe_features, gallery_names)
       if args.attack_type == 'untargeted_attack':
-        maxiter = 400
-        sizepop = 40
-        ink_DE_vor_attack = Deformable_ink_attack(args, model, gallery_features, true_labels, target_labels, gallery_names,  maxiter, sizepop, args.AreaNum, args.AnchorNum)
+        ink_DE_vor_attack = Deformable_ink_attack(args, model, gallery_features, true_labels, target_labels, gallery_names, 
+                                                  args.maxiter, args.sizepop, args.AreaNum, args.AnchorNum)
 
         succ_recognitions_after_attack = ink_DE_vor_attack.excute(args,images)
       elif args.attack_type == 'targeted_attack':
-        sizepop = 40
         top1_predicted_labels, top1_predicted_scores, top2_predicted_labels, top2_predicted_scores = utils.top2_predict(gallery_features, probe_features, gallery_names)
         target_labels = top2_predicted_labels
-        ink_DE_vor_attack = Deformable_ink_attack_target(args, model, gallery_features, true_labels, target_labels, gallery_names,  args.maxiter, sizepop, args.AreaNum, args.AnchorNum)
+        ink_DE_vor_attack = Deformable_ink_attack_target(args, model, gallery_features, true_labels, target_labels, gallery_names,  args.maxiter, args.sizepop, args.AreaNum, args.AnchorNum)
         succ_recognitions_after_attack = ink_DE_vor_attack.excute(args,images)
       else:
         print("Error - attack type is wrong")
@@ -89,6 +87,7 @@ if __name__ == '__main__':
     parser.add_argument('--model', type=str, default='RESNEST')
     parser.add_argument('--pretrained_path', type=str)
     parser.add_argument('--maxiter', default=200, type=int)
+    parser.add_argument('--sizepop', default=40, type=int)
     parser.add_argument('--data_type', default='casia', type=str,choices=["casia","buua","oulu"])
     parser.add_argument('--AreaNum', default='8', type=int)
     parser.add_argument('--AnchorNum', default='4', type=int)
