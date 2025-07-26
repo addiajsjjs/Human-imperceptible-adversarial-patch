@@ -1,6 +1,6 @@
 ## Setup
 
-The code in this project was executed using **Python 3.8.11**. To install the required dependencies, use the provided requirements file:
+The code in this project was executed using **Python 3.8.11** and ran on a single A6000 GPU. To install the required dependencies, use the provided requirements file:
 
 ```bash
 pip install -r requirements.txt
