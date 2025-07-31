@@ -1,7 +1,7 @@
 ## Setup
 
 The code in this project was executed using **Python 3.8.11** and ran on a single A6000 GPU. To install the required dependencies, use the provided requirements file:
-
+The test NIR camera used in our experiments is a 1080P-resolution device equipped with a 6.0 mm focal length lens and operates under 850 nm NIR. 
 ```bash
 pip install -r requirements.txt
 ```
